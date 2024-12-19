@@ -18,6 +18,7 @@ env, _ = make_humenv(
     state_init="Default",
 )
 
+# FB-CPR (Forward-Backward representations with Conditional Policy Regularization)
 # https://huggingface.co/facebook/metamotivo-S-1 
 # huggingface-cli download --resume-download facebook/metamotivo-S-1 --local-dir ./
 # facebook/metamotivo-M-1  facebook/metamotivo-S-1
