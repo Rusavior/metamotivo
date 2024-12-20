@@ -18,7 +18,9 @@
                 <div class='input-box'>
                     <textarea id='input-box' placeholder='This is the input box. The result of voice translation is displayed here, and the text in this area can be edited.'></textarea>
                 </div>
-                <button id='submit-btn'>submit</button>
+                <div class="submit-container">
+                    <button id='submit-btn'>submit</button>
+                </div>
             </div>
         </div>
         
@@ -34,8 +36,11 @@
             </div>
             
             <div class='image-display'>
-                <h3>image display area</h3>
-                <div id='image-container'></div>
+                <h3>Image Display Area</h3>
+                <textarea id="currentStep" readonly>current step</textarea>
+                <div class="image-stream-area">
+                    <img id="streamImage" src="" alt="Stream Image">
+                </div>
             </div>
         </div>
     </div>

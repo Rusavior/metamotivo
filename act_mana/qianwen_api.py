@@ -11,25 +11,25 @@ class QianwenAPI:
 
     def get_steps(self, text):  
         try:     
-            # response = self.llm_api.chat.completions.create(
-            #     model='qwen-plus', # 'deepseek-chat',
-            #     messages=[
-            #         {'role': 'system', 'content': self.sys_prompt},
-            #         {'role': 'user', 'content': text},
-            #     ],
-            #     max_tokens=1024,
-            #     # temperature=0.7,
-            #     stream=False
-            #     )
-            # response_ = response.choices[0].message.content.strip()
-            response_ = '\
-                I will do the following steps (for test) \n \
-                1. Scan the room to locate a red ball. \n \
-                2. Navigate to the red ball once identified.  \n \
-                3. Take a picture of the red ball. \n \
-                4. Return to your location. \n \
-                5. Show you the picture taken. \n \
-                That is all. '
+            response = self.llm_api.chat.completions.create(
+                model='qwen-plus', # 'deepseek-chat',
+                messages=[
+                    {'role': 'system', 'content': self.sys_prompt},
+                    {'role': 'user', 'content': text},
+                ],
+                max_tokens=1024,
+                # temperature=0.7,
+                stream=False
+                )
+            response_ = response.choices[0].message.content.strip()
+            # response_ = '\
+            #     I will do the following steps (for test) \n \
+            #     1. Scan the room to locate a red ball. \n \
+            #     2. Navigate to the red ball once identified.  \n \
+            #     3. Take a picture of the red ball. \n \
+            #     4. Return to your location. \n \
+            #     5. Show you the picture taken. \n \
+            #     That is all. '
             
             # 处理返回的文本，分割成步骤列表
             steps = [step.strip() for step in response_.split('\n') if step.strip()]

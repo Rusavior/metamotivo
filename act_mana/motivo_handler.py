@@ -21,10 +21,9 @@ from metamotivo.fb_cpr.huggingface import FBcprModel
 
 class MotivoHandler:
     def __init__(self):
-        '''初始化Motivo相关配置'''
         self.device = 'cpu'
-        
-        # 设置observation转换wrapper
+        self.env = None
+        # init gymnasium TransformObservation 
         if Version('0.26') <= Version(gymnasium.__version__) < Version('1.0'):
             self.transform_obs_wrapper = lambda env: TransformObservation(
                 env, lambda obs: torch.tensor(obs.reshape(1, -1), dtype=torch.float32, device=self.device)
@@ -34,49 +33,33 @@ class MotivoHandler:
                 env, lambda obs: torch.tensor(obs.reshape(1, -1), dtype=torch.float32, device=self.device), 
                 env.observation_space
             )
-
-        # 初始化环境
-        self.env, _ = make_humenv(
-            num_envs=1,
-            wrappers=[
-                FlattenObservation,
-                self.transform_obs_wrapper,
-            ],
-            state_init='Default',
-        )
-        
-        # 加载模型
         self.model = FBcprModel.from_pretrained('/home/xl/Downloads/models/metamotivo-M-1')
         self.model.to(self.device)
         
     def process_step(self, step_text, frame_callback=None):
-        '''处理单个步骤，返回所有帧数据'''
         try:
             print('Processing step:', step_text)
-            # 重置环境
+
+            # init env and model
+            self.env, _ = make_humenv(
+                num_envs=1,
+                wrappers=[
+                    FlattenObservation,
+                    self.transform_obs_wrapper,
+                ],
+                state_init='Default',
+            )
             observation, _ = self.env.reset()
-            
-            # 采样embedding
-            z = self.model.sample_z(1)
-            
-            # 渲染并处理第一帧
-            frame = self.env.render()
-            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            
-            # 将图像转换为base64字符串并立即发送
-            _, buffer = cv2.imencode('.png', frame)
-            img_str = base64.b64encode(buffer).decode()
-            yield img_str
-            
-            # 生成后续帧
-            for i in range(30):
+            z = self.model.sample_z(1)         
+
+            # action inference and gen image stream
+            for i in range(31):
+                frame = self.env.render()
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
                 action = self.model.act(observation, z, mean=True)
                 observation, reward, terminated, truncated, info = self.env.step(action.cpu().numpy().ravel())
                 
-                frame = self.env.render()
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-                
-                # 将图像转换为base64字符串并立即发送
                 _, buffer = cv2.imencode('.png', frame)
                 img_str = base64.b64encode(buffer).decode()
                 yield img_str
@@ -84,10 +67,7 @@ class MotivoHandler:
         except Exception as e:
             print(f'Error in process_step: {str(e)}')
     
-
-        
     def __del__(self):
-        '''析构函数中关闭环境'''
         if hasattr(self, 'env'):
             self.env.close()
 

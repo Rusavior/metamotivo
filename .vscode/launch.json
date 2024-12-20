@@ -5,11 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Current File",
+            "name": "python",
+            "python":"/home/xl/.pkgs/miniconda3/envs/motivo/bin/python",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "cwd":"${fileDirname}",
+            "console": "integratedTerminal",
+            "env": {
+              "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+            },
+            "pythonArgs": ["-Xfrozen_modules=off"],
+  
         }
     ]
 }
