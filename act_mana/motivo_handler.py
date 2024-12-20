@@ -20,7 +20,7 @@ from humenv import make_humenv
 from metamotivo.fb_cpr.huggingface import FBcprModel
 
 class MotivoHandler:
-    def __init__(self):
+    def __init__(self, model_path):
         self.device = 'cpu'
         self.env = None
         # init gymnasium TransformObservation 
@@ -33,15 +33,16 @@ class MotivoHandler:
                 env, lambda obs: torch.tensor(obs.reshape(1, -1), dtype=torch.float32, device=self.device), 
                 env.observation_space
             )
-        self.model = FBcprModel.from_pretrained('/home/xl/Downloads/models/metamotivo-M-1')
+        self.model = FBcprModel.from_pretrained(model_path)
         self.model.to(self.device)
         
-    def process_step(self, step_text, frame_callback=None):
+    def process_step(self, step_text, task):
         try:
-            print('Processing step:', step_text)
+            # print('Processing step:', step_text)
 
             # init env and model
             self.env, _ = make_humenv(
+                task = task, 
                 num_envs=1,
                 wrappers=[
                     FlattenObservation,
@@ -53,7 +54,7 @@ class MotivoHandler:
             z = self.model.sample_z(1)         
 
             # action inference and gen image stream
-            for i in range(31):
+            for i in range(300):
                 frame = self.env.render()
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 

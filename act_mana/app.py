@@ -1,17 +1,24 @@
 from flask import Flask, render_template, request, jsonify, Response
-from motivo_handler import MotivoHandler
-from qianwen_api import QianwenAPI
 import json
 import time
+from config import humenv_tasks, sentence_transformer_model, fbpcr_model
+from motivo_handler import MotivoHandler
+from qianwen_api import QianwenAPI
+from semantic1 import SentTransformer
+# from semantic2 import SentTfidf
+# semantic_mapper = SemanticMapper()
+
+semantic_mapper = SentTransformer(sentence_transformer_model)
 
 app = Flask(__name__)
-motivo_handler = MotivoHandler()
+motivo_handler = MotivoHandler(fbpcr_model)
 qianwen_api = QianwenAPI()
 steps_data = {
     '1': 'Step 1 description',
     '2': 'Step 2 description',
     # Add more steps as needed
 }
+
 
 @app.route('/')
 def index():
@@ -39,7 +46,11 @@ def stream(step):
         try:
             # 获取当前步骤的描述
             step_description = steps_data.get(str(step_index), 'Unknown step')
-            for frame in motivo_handler.process_step(step_index):
+            most_similar_task, similarity = semantic_mapper.find_most_similar(step_description, humenv_tasks)
+            # print(step_description, most_similar_task, similarity)
+            step_description = f'{step_description} >> {most_similar_task}, ({similarity:.2f})'
+            print(step_description)
+            for frame in motivo_handler.process_step(step_index, most_similar_task):
                 # print('Generated new frame')
                 yield f'data: {json.dumps({"image": frame, "description": step_description})}\n\n'
                 time.sleep(0.02)
