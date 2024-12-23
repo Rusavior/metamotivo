@@ -21,9 +21,10 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
         
         const data = await response.json();
         const steps = Array.isArray(data.steps) ? data.steps : [data.steps];
+        const matched_info = Array.isArray(data.matched_info) ? data.matched_info : [data.matched_info];
         
         // 显示步骤标题
-        stepsOutput.innerHTML = '<p>show high-level behavior steps</p>';
+        stepsOutput.innerHTML = '<p>High-level behavior steps</p>';
         
         // 显示所有步骤
         steps.forEach((step, index) => {
@@ -44,7 +45,7 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
             const currentStep = steps[currentStepIndex];
             // 更新当前步骤文本
             // document.getElementById('currentStep').value = `${currentStepIndex + 1}. ${currentStep}`;
-            document.getElementById('currentStep').value = `current step: ${currentStep}`;
+            document.getElementById('currentStep').value = `${currentStep}\n ${matched_info[currentStepIndex]}`;
             
             // 创建 EventSource
             const eventSource = new EventSource(`/stream/${currentStepIndex}`);

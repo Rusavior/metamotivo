@@ -22,7 +22,7 @@ from metamotivo.fb_cpr.huggingface import FBcprModel
 class MotivoHandler:
     def __init__(self, model_path):
         self.device = 'cpu'
-        self.env = None
+        self.env,self.manager = None,None
         # init gymnasium TransformObservation 
         if Version('0.26') <= Version(gymnasium.__version__) < Version('1.0'):
             self.transform_obs_wrapper = lambda env: TransformObservation(
@@ -39,9 +39,8 @@ class MotivoHandler:
     def process_step(self, step_text, task):
         try:
             # print('Processing step:', step_text)
-
             # init env and model
-            self.env, _ = make_humenv(
+            self.env, self.manager = make_humenv(
                 task = task, 
                 num_envs=1,
                 wrappers=[
@@ -64,13 +63,17 @@ class MotivoHandler:
                 _, buffer = cv2.imencode('.png', frame)
                 img_str = base64.b64encode(buffer).decode()
                 yield img_str
+            self.close_env()
                 
         except Exception as e:
             print(f'Error in process_step: {str(e)}')
+            self.close_env()
     
-    def __del__(self):
+    def close_env(self):
         if hasattr(self, 'env'):
             self.env.close()
+            if self.manager is not None:
+                self.manager.shutdown()
 
 
 if __name__=='__main__':

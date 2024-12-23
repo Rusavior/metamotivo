@@ -22,6 +22,7 @@ class QianwenAPI:
                 stream=False
                 )
             response_ = response.choices[0].message.content.strip()
+            
             # response_ = '\
             #     I will do the following steps (for test) \n \
             #     1. Scan the room to locate a red ball. \n \
@@ -33,8 +34,8 @@ class QianwenAPI:
             
             # 处理返回的文本，分割成步骤列表
             steps = [step.strip() for step in response_.split('\n') if step.strip()]
-            # 过滤掉非步骤的行
-            steps = [step for step in steps if any(c.isdigit() for c in step)]
+            # # 过滤掉非步骤的行
+            # steps = [step for step in steps if any(c.isdigit() for c in step)]
             
         except:
             steps = ['error when calling llm api.']

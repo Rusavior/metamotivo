@@ -107,7 +107,8 @@ h1 {
 
 .image-display textarea {
     width: calc(100% + 40px);
-    height: 30px;
+    /* height: 30px; */
+    height: auto;
     margin: 0 -20px;
     padding: 5px 20px;
     border: none;
@@ -139,4 +140,4 @@ h3 {
     color: #333;
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
-} 
+}

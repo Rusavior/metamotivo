@@ -14,11 +14,13 @@ app = Flask(__name__)
 motivo_handler = MotivoHandler(fbpcr_model)
 qianwen_api = QianwenAPI()
 steps_data = {
-    '1': 'Step 1 description',
-    '2': 'Step 2 description',
+    '1': ('Step 1 description', 'Task 1', 0.5),
+    '2': ('Step 2 description', 'Task 3', 0.7),
     # Add more steps as needed
 }
 
+sim_threshold = 0.3
+unmatched_task = 'Unknown Task'
 
 @app.route('/')
 def index():
@@ -31,10 +33,19 @@ def process():
     steps = qianwen_api.get_steps(input_text)
     
     global steps_data
-    steps_data = {str(i): step for i, step in enumerate(steps)}
+    steps_data = {}
+    matched = []
+    for i,step_desc in enumerate(steps):
+        most_similar_task, similarity = semantic_mapper.find_most_similar(step_desc, humenv_tasks)
+        if similarity < sim_threshold:
+            most_similar_task = unmatched_task
+            # similarity = 0.0
+        steps_data[str(i)] = (step_desc, most_similar_task, similarity) 
+        matched.append(f' <=> {similarity:.2f}, {most_similar_task}')
     
     return jsonify({
-        'steps': steps
+        'steps': steps,
+        'matched_info': matched
     })
 
 @app.route('/stream/<step>')
@@ -44,16 +55,16 @@ def stream(step):
         step_index = int(step)
         print('Starting stream for step:', step_index)
         try:
-            # 获取当前步骤的描述
-            step_description = steps_data.get(str(step_index), 'Unknown step')
-            most_similar_task, similarity = semantic_mapper.find_most_similar(step_description, humenv_tasks)
-            # print(step_description, most_similar_task, similarity)
-            step_description = f'{step_description} >> {most_similar_task}, ({similarity:.2f})'
-            print(step_description)
-            for frame in motivo_handler.process_step(step_index, most_similar_task):
-                # print('Generated new frame')
-                yield f'data: {json.dumps({"image": frame, "description": step_description})}\n\n'
-                time.sleep(0.02)
+            # 获取当前步骤
+            step_desc, most_similar_task, _ = steps_data.get(str(step_index), unmatched_task)
+            if most_similar_task != unmatched_task:                
+                for frame in motivo_handler.process_step(step_index, most_similar_task):
+                    # print('Generated new frame')
+                    yield f'data: {json.dumps({"image": frame})}\n\n'
+                    time.sleep(0.02)
+            else:
+                print('Unknown step, skipping...')
+                time.sleep(2)
             # 当前步骤完成时发送结束信号
             yield f'data: {json.dumps({"complete": True})}\n\n'
         except Exception as e:
